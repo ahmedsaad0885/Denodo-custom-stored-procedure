@@ -31,7 +31,7 @@ public class CustomProcedure2 extends AbstractStoredProcedure {
             new StoredProcedureParameter("financial_claims_release_order_id", Types.INTEGER, StoredProcedureParameter.DIRECTION_OUT),
             new StoredProcedureParameter("last_source_update", Types.TIMESTAMP, StoredProcedureParameter.DIRECTION_OUT),
             new StoredProcedureParameter("is_from_ro", Types.BOOLEAN, StoredProcedureParameter.DIRECTION_OUT),
-            new StoredProcedureParameter("financial_claims_list", Types.ARRAY, StoredProcedureParameter.DIRECTION_OUT,
+            new StoredProcedureParameter("financial_cliams_list", Types.ARRAY, StoredProcedureParameter.DIRECTION_OUT,
                 true, new StoredProcedureParameter[]{
                     new StoredProcedureParameter("description", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
                     new StoredProcedureParameter("fc_reference_number", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
@@ -47,6 +47,7 @@ public class CustomProcedure2 extends AbstractStoredProcedure {
 
 
     @Override
+
     protected void doCall(Object[] inputValues) throws SynchronizeException, StoredProcedureException {
         String filePath = (String) inputValues[0];
         ObjectMapper objectMapper = new ObjectMapper();
@@ -59,40 +60,48 @@ public class CustomProcedure2 extends AbstractStoredProcedure {
             Boolean isFromRo = null;
 
             for (JsonNode node : rootNode) {
-                String description = node.get("description").asText();
-                String fcReferenceNumber = node.get("fc_reference_number").asText();
-                BigDecimal amountInRiyal = node.get("amount_in_riyal").decimalValue();
-                String approvalStatusArabicName = node.get("approval_status_arabic_name").asText();
-                Timestamp creationDate = Timestamp.valueOf(node.get("creation_date").asText());
-                Timestamp approvalDate = Timestamp.valueOf(node.get("approval_date").asText());
-                String financialClaimCategoryArabicName = node.get("financial_claim_category_arabic_name").asText();
-                String financialClaimSubCategoryArabicName = node.get("financial_claim_sub_category_arabic_name").asText();
-
-                // Only set financialClaimsReleaseOrderId, lastSourceUpdate, and isFromRo once as they are not part of the array
-                if (financialClaimsReleaseOrderId == null && lastSourceUpdate == null && isFromRo == null) {
+                if (node.has("financial_claims_release_order_id")) {
                     financialClaimsReleaseOrderId = node.get("financial_claims_release_order_id").asInt();
+                }
+                if (node.has("last_source_update")) {
                     lastSourceUpdate = Timestamp.valueOf(node.get("last_source_update").asText());
+                }
+                if (node.has("is_from_ro")) {
                     isFromRo = node.get("is_from_ro").asBoolean();
                 }
 
-                List<Object> structValues = Arrays.asList(
-                    description, 
-                    fcReferenceNumber, 
-                    amountInRiyal, 
-                    approvalStatusArabicName, 
-                    creationDate, 
-                    approvalDate, 
-                    financialClaimCategoryArabicName, 
-                    financialClaimSubCategoryArabicName
-                );
+                JsonNode claimsList = node.get("financial_cliams_list");
+                if (claimsList != null && claimsList.isArray()) {
+                    for (JsonNode claim : claimsList) {
+                        String description = claim.has("description") ? claim.get("description").asText() : null;
+                        String fcReferenceNumber = claim.has("fc_reference_number") ? claim.get("fc_reference_number").asText() : null;
+                        BigDecimal amountInRiyal = claim.has("amount_in_riyal") ? claim.get("amount_in_riyal").decimalValue() : null;
+                        String approvalStatusArabicName = claim.has("approval_status_arabic_name") ? claim.get("approval_status_arabic_name").asText() : null;
+                        Timestamp creationDate = claim.has("creation_date") ? Timestamp.valueOf(claim.get("creation_date").asText()) : null;
+                        Timestamp approvalDate = claim.has("approval_date") ? Timestamp.valueOf(claim.get("approval_date").asText()) : null;
+                        String financialClaimCategoryArabicName = claim.has("financial_claim_category_arabic_name") ? claim.get("financial_claim_category_arabic_name").asText() : null;
+                        String financialClaimSubCategoryArabicName = claim.has("financial_claim_sub_category_arabic_name") ? claim.get("financial_claim_sub_category_arabic_name").asText() : null;
 
-                Struct struct = super.createStruct(
-                    Arrays.asList(
-                        "description", "fc_reference_number", "amount_in_riyal", "approval_status_arabic_name",
-                        "creation_date", "approval_date", "financial_claim_category_arabic_name",
-                        "financial_claim_sub_category_arabic_name"
-                    ), structValues);
-                financialClaimsList.add(struct);
+                        List<Object> structValues = Arrays.asList(
+                            description, 
+                            fcReferenceNumber, 
+                            amountInRiyal, 
+                            approvalStatusArabicName, 
+                            creationDate, 
+                            approvalDate, 
+                            financialClaimCategoryArabicName, 
+                            financialClaimSubCategoryArabicName
+                        );
+
+                        Struct struct = super.createStruct(
+                            Arrays.asList(
+                                "description", "fc_reference_number", "amount_in_riyal", "approval_status_arabic_name",
+                                "creation_date", "approval_date", "financial_claim_category_arabic_name",
+                                "financial_claim_sub_category_arabic_name"
+                            ), structValues);
+                        financialClaimsList.add(struct);
+                    }
+                }
             }
 
             Object[] row = new Object[4];
@@ -103,11 +112,14 @@ public class CustomProcedure2 extends AbstractStoredProcedure {
             getProcedureResultSet().addRow(row);
         } catch (IOException e) {
             throw new StoredProcedureException("Error reading JSON file", e);
+        } catch (NullPointerException e) {
+            throw new StoredProcedureException("Null value encountered in JSON data", e);
         } catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
     }
+
 
     @Override
     public String getName() {
