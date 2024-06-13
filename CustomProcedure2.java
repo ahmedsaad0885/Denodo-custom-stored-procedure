@@ -54,33 +54,38 @@ public class CustomProcedure2 extends AbstractStoredProcedure {
 
         try {
             JsonNode rootNode = objectMapper.readTree(new File(filePath));
-            List<Struct> financialClaimsList = new ArrayList<>();
-            Integer financialClaimsReleaseOrderId = null;
-            Timestamp lastSourceUpdate = null;
-            Boolean isFromRo = null;
-
+            Integer  financialClaimsReleaseOrderId= null;
+            Timestamp  lastSourceUpdate = null;
+            Boolean  isFromRo = null;
             for (JsonNode node : rootNode) {
                 if (node.has("financial_claims_release_order_id")) {
-                    financialClaimsReleaseOrderId = node.get("financial_claims_release_order_id").asInt();
+                  financialClaimsReleaseOrderId = node.get("financial_claims_release_order_id").asInt();
                 }
                 if (node.has("last_source_update")) {
-                    lastSourceUpdate = Timestamp.valueOf(node.get("last_source_update").asText());
+                  lastSourceUpdate = Timestamp.valueOf(node.get("last_source_update").asText());
                 }
                 if (node.has("is_from_ro")) {
-                    isFromRo = node.get("is_from_ro").asBoolean();
+                   isFromRo = node.get("is_from_ro").asBoolean();
                 }
-
-                JsonNode claimsList = node.get("financial_cliams_list");
+                	List<Struct> financialClaimsList = new ArrayList<>();
+                	JsonNode claimsList = node.get("financial_cliams_list");
+					/*
+					 * Iterator<JsonNode> claimsListIterator =
+					 * node.get("financial_cliams_list").elements();
+					 * while(claimsListIterator.hasNext()) {
+					 * 
+					 * }
+					 */
                 if (claimsList != null && claimsList.isArray()) {
                     for (JsonNode claim : claimsList) {
-                        String description = claim.has("description") ? claim.get("description").asText() : null;
-                        String fcReferenceNumber = claim.has("fc_reference_number") ? claim.get("fc_reference_number").asText() : null;
-                        BigDecimal amountInRiyal = claim.has("amount_in_riyal") ? claim.get("amount_in_riyal").decimalValue() : null;
-                        String approvalStatusArabicName = claim.has("approval_status_arabic_name") ? claim.get("approval_status_arabic_name").asText() : null;
-                        Timestamp creationDate = claim.has("creation_date") ? Timestamp.valueOf(claim.get("creation_date").asText()) : null;
-                        Timestamp approvalDate = claim.has("approval_date") ? Timestamp.valueOf(claim.get("approval_date").asText()) : null;
-                        String financialClaimCategoryArabicName = claim.has("financial_claim_category_arabic_name") ? claim.get("financial_claim_category_arabic_name").asText() : null;
-                        String financialClaimSubCategoryArabicName = claim.has("financial_claim_sub_category_arabic_name") ? claim.get("financial_claim_sub_category_arabic_name").asText() : null;
+                        String description = claim.has("attr_0") ? claim.get("attr_0").asText() : null;
+                        String fcReferenceNumber = claim.has("attr_1") ? claim.get("attr_1").asText() : null;
+                        BigDecimal amountInRiyal = claim.has("attr_2") ? claim.get("attr_2").decimalValue() : null;
+                        String approvalStatusArabicName = claim.has("attr_3") ? claim.get("attr_3").asText() : null;
+                        Timestamp creationDate = claim.has("attr_4") ? Timestamp.valueOf(claim.get("attr_4").asText()) : null;
+                        Timestamp approvalDate = claim.has("attr_5") ? Timestamp.valueOf(claim.get("attr_5").asText()) : null;
+                        String financialClaimCategoryArabicName = claim.has("attr_6") ? claim.get("attr_6").asText() : null;
+                        String financialClaimSubCategoryArabicName = claim.has("attr_7") ? claim.get("attr_7").asText() : null;
 
                         List<Object> structValues = Arrays.asList(
                             description, 
@@ -102,14 +107,14 @@ public class CustomProcedure2 extends AbstractStoredProcedure {
                         financialClaimsList.add(struct);
                     }
                 }
-            }
-
             Object[] row = new Object[4];
             row[0] = financialClaimsReleaseOrderId;
             row[1] = lastSourceUpdate;
             row[2] = isFromRo;
             row[3] = createArray(financialClaimsList, Types.STRUCT);
             getProcedureResultSet().addRow(row);
+            }
+
         } catch (IOException e) {
             throw new StoredProcedureException("Error reading JSON file", e);
         } catch (NullPointerException e) {
