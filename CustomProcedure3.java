@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class CustomProcedure2 extends AbstractStoredProcedure {
+public class CustomProcedure3 extends AbstractStoredProcedure {
 
     private static final long serialVersionUID = 1L;
 
@@ -49,18 +49,22 @@ public class CustomProcedure2 extends AbstractStoredProcedure {
             new StoredProcedureParameter("is_from_ro", Types.BOOLEAN, StoredProcedureParameter.DIRECTION_OUT)
         };
     }
+    
 
     @Override
+    
     protected void doCall(Object[] inputValues) throws SynchronizeException, StoredProcedureException {
         String filePath = (String) inputValues[0];
         JsonFactory jsonFactory = new JsonFactory();
 
-        DateTimeFormatter formatter = new DateTimeFormatterBuilder()
-                .appendPattern("yyyy-MM-dd HH:mm:ss")
-                .optionalStart()
-                .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
-                .optionalEnd()
-                .toFormatter();
+        DateTimeFormatter formatter = setTimeFormatter();
+        
+        Class<?>[] metadata = new Class<?>[] {
+            String.class, String.class, BigDecimal.class, String.class, 
+            Timestamp.class, Timestamp.class, String.class, String.class
+        };
+        
+        
 
         try (JsonParser jsonParser = jsonFactory.createParser(new File(filePath))) {
             Integer financialClaimsReleaseOrderId = null;
@@ -75,62 +79,51 @@ public class CustomProcedure2 extends AbstractStoredProcedure {
                         jsonParser.nextToken();
 
                         switch (fieldName) {
-                            case "financial_claims_release_order_id":
-                                financialClaimsReleaseOrderId = jsonParser.getIntValue();
-                                break;
-                            case "last_source_update":
-                                lastSourceUpdate = Timestamp.valueOf(LocalDateTime.parse(jsonParser.getText(), formatter));
-                                break;
-                            case "is_from_ro":
-                                if (jsonParser.currentToken() == JsonToken.VALUE_NUMBER_INT) {
-                                    isFromRo = jsonParser.getIntValue() != 0;
-                                } else if (jsonParser.currentToken() == JsonToken.VALUE_TRUE || jsonParser.currentToken() == JsonToken.VALUE_FALSE) {
-                                    isFromRo = jsonParser.getBooleanValue();
-                                }
-                                break;
-                            case "financial_cliams_list":
-                                if (jsonParser.currentToken() == JsonToken.START_ARRAY) {
-                                    while (jsonParser.nextToken() != JsonToken.END_ARRAY) {
-                                        if (jsonParser.currentToken() == JsonToken.START_OBJECT) {
-                                            String description = null, fcReferenceNumber = null, approvalStatusArabicName = null, financialClaimCategoryArabicName = null, financialClaimSubCategoryArabicName = null;
-                                            BigDecimal amountInRiyal = null;
-                                            Timestamp creationDate = null, approvalDate = null;
+                        case "financial_claims_release_order_id":
+                        	financialClaimsReleaseOrderId = handleInt(jsonParser);break;
+                        case "last_source_update":
+                        	lastSourceUpdate= handleTimestamp(jsonParser, formatter);break;
+                        case "is_from_ro":
+                        	isFromRo=handleBoolean(jsonParser);break;
+                        case "financial_cliams_list":
+                            if (jsonParser.currentToken() == JsonToken.START_ARRAY) {
 
-                                            while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
-                                                String claimField = jsonParser.getCurrentName();
-                                                jsonParser.nextToken();
+                            	
+                                while (jsonParser.nextToken() != JsonToken.END_ARRAY) {
+                                    if (jsonParser.currentToken() == JsonToken.START_OBJECT) {
+                                    	
+                                    	
+                                    	int stringIndex = 0, decimalIndex = 0, timestampIndex = 0;
 
-                                                switch (claimField) {
-                                                    case "attr_0":
-                                                        description = jsonParser.getText();
-                                                        break;
-                                                    case "attr_1":
-                                                        fcReferenceNumber = jsonParser.getText();
-                                                        break;
-                                                    case "attr_2":
-                                                        amountInRiyal = jsonParser.getDecimalValue();
-                                                        break;
-                                                    case "attr_3":
-                                                        approvalStatusArabicName = jsonParser.getText();
-                                                        break;
-                                                    case "attr_4":
-                                                        creationDate = Timestamp.valueOf(LocalDateTime.parse(jsonParser.getText(), formatter));
-                                                        break;
-                                                    case "attr_5":
-                                                        approvalDate = Timestamp.valueOf(LocalDateTime.parse(jsonParser.getText(), formatter));
-                                                        break;
-                                                    case "attr_6":
-                                                        financialClaimCategoryArabicName = jsonParser.getText();
-                                                        break;
-                                                    case "attr_7":
-                                                        financialClaimSubCategoryArabicName = jsonParser.getText();
-                                                        break;
-                                                }
+                                        String[] stringArray = new String[(int) Arrays.stream(metadata).filter(type -> type == String.class).count()];
+                                        BigDecimal[] decimalArray = new BigDecimal[(int) Arrays.stream(metadata).filter(type -> type == BigDecimal.class).count()];
+                                        Timestamp[] timestampArray = new Timestamp[(int) Arrays.stream(metadata).filter(type -> type == Timestamp.class).count()];
+                                    	
+                                        int currentIndex = 0;
+                                        while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
+                                            String claimField = jsonParser.getCurrentName();
+                                            jsonParser.nextToken();
+
+                                            if (metadata[currentIndex] == String.class) {
+                                                stringArray[stringIndex++] = handleText(jsonParser);
+                                            } else if (metadata[currentIndex] == BigDecimal.class) {
+                                                decimalArray[decimalIndex++] = handleDecimal(jsonParser);
+                                            } else if (metadata[currentIndex] == Timestamp.class) {
+                                                timestampArray[timestampIndex++] = handleTimestamp(jsonParser, formatter);
                                             }
-
-                                            List<Object> structValues = Arrays.asList(
-                                                description, fcReferenceNumber, amountInRiyal, approvalStatusArabicName, creationDate, approvalDate, financialClaimCategoryArabicName, financialClaimSubCategoryArabicName
-                                            );
+                                            currentIndex++;
+                                        }
+                                        List<Object> structValues = new ArrayList<>();
+                                        int strIdx = 0, decIdx = 0, tsIdx = 0;
+                                        for (Class<?> type : metadata) {
+                                            if (type == String.class) {
+                                                structValues.add(stringArray[strIdx++]);
+                                            } else if (type == BigDecimal.class) {
+                                                structValues.add(decimalArray[decIdx++]);
+                                            } else if (type == Timestamp.class) {
+                                                structValues.add(timestampArray[tsIdx++]);
+                                            }
+                                        }
 
                                             Struct struct = super.createStruct(
                                                 Arrays.asList(
@@ -164,8 +157,61 @@ public class CustomProcedure2 extends AbstractStoredProcedure {
         }
     }
 
-
-
+    private String handleText(JsonParser jsonParser) {
+        try {
+            return jsonParser.getText();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    
+    private BigDecimal handleDecimal(JsonParser jsonParser) {
+        try {
+            return jsonParser.getDecimalValue();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    
+    private Boolean handleBoolean(JsonParser jsonParser) {
+        try {
+            if (jsonParser.currentToken() == JsonToken.VALUE_NUMBER_INT) {
+                return jsonParser.getIntValue() != 0;
+            } else if (jsonParser.currentToken() == JsonToken.VALUE_TRUE || jsonParser.currentToken() == JsonToken.VALUE_FALSE) {
+                return jsonParser.getBooleanValue();
+            }
+        } catch (Exception e) {
+            return null;
+        }
+        return null;
+    }
+    
+    
+    private Timestamp handleTimestamp(JsonParser jsonParser, DateTimeFormatter formatter) {
+        try {
+            return Timestamp.valueOf(LocalDateTime.parse(jsonParser.getText(), formatter));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    
+    private Integer handleInt(JsonParser jsonParser) {
+        try {
+            return jsonParser.getIntValue();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    
+    private DateTimeFormatter setTimeFormatter () {
+    	return new DateTimeFormatterBuilder()
+                .appendPattern("yyyy-MM-dd HH:mm:ss")
+                .optionalStart()
+                .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
+                .optionalEnd()
+                .toFormatter();
+    	
+    }
     @Override
     public String getName() {
         return "file_reader";
