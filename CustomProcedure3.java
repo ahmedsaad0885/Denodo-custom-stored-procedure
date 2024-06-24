@@ -24,16 +24,19 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
 
     private static final long serialVersionUID = 1L;
     
-    Class<?>[] metadata = new Class<?>[] {
+  //STATIC METADATA RELATED    
+    Class<?>[] structMetadata = new Class<?>[] {
         String.class, String.class, BigDecimal.class, String.class, 
         Timestamp.class, Timestamp.class, String.class, String.class,Integer.class
     };
+  //STATIC METADATA RELATED
 
     public String getDescription() {
         return "Get data from JSON file";
     }
 
     public StoredProcedureParameter[] getParameters() {
+    	//STATIC METADATA RELATED
         return new StoredProcedureParameter[]{
             new StoredProcedureParameter("filePath", Types.VARCHAR, StoredProcedureParameter.DIRECTION_IN),
             new StoredProcedureParameter("financial_claims_release_order_id", Types.INTEGER, StoredProcedureParameter.DIRECTION_OUT),
@@ -53,6 +56,7 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
             new StoredProcedureParameter("last_source_update", Types.TIMESTAMP, StoredProcedureParameter.DIRECTION_OUT),
             new StoredProcedureParameter("is_from_ro", Types.BOOLEAN, StoredProcedureParameter.DIRECTION_OUT)
         };
+      //STATIC METADATA RELATED
     }
     
 
@@ -170,30 +174,30 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
 			    	
 			    	int stringIndex = 0, decimalIndex = 0, timestampIndex = 0, intergerIndex = 0;
 
-			        String[] stringArray = new String[(int) Arrays.stream(metadata).filter(type -> type == String.class).count()];
-			        BigDecimal[] decimalArray = new BigDecimal[(int) Arrays.stream(metadata).filter(type -> type == BigDecimal.class).count()];
-			        Timestamp[] timestampArray = new Timestamp[(int) Arrays.stream(metadata).filter(type -> type == Timestamp.class).count()];
-			        Integer[] integerArray = new Integer[(int) Arrays.stream(metadata).filter(type -> type == Integer.class).count()];
+			        String[] stringArray = new String[(int) Arrays.stream(structMetadata).filter(type -> type == String.class).count()];
+			        BigDecimal[] decimalArray = new BigDecimal[(int) Arrays.stream(structMetadata).filter(type -> type == BigDecimal.class).count()];
+			        Timestamp[] timestampArray = new Timestamp[(int) Arrays.stream(structMetadata).filter(type -> type == Timestamp.class).count()];
+			        Integer[] integerArray = new Integer[(int) Arrays.stream(structMetadata).filter(type -> type == Integer.class).count()];
 			    	
 			        int currentIndex = 0;
 			        while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
 			            String claimField = jsonParser.getCurrentName();
 			            jsonParser.nextToken();
 
-			            if (metadata[currentIndex] == String.class) {
+			            if (structMetadata[currentIndex] == String.class) {
 			                stringArray[stringIndex++] = handleText(jsonParser);
-			            } else if (metadata[currentIndex] == BigDecimal.class) {
+			            } else if (structMetadata[currentIndex] == BigDecimal.class) {
 			                decimalArray[decimalIndex++] = handleDecimal(jsonParser);
-			            } else if (metadata[currentIndex] == Timestamp.class) {
+			            } else if (structMetadata[currentIndex] == Timestamp.class) {
 			                timestampArray[timestampIndex++] = handleTimestamp(jsonParser, formatter);
-			            }else if (metadata[currentIndex] == Integer.class) {
+			            }else if (structMetadata[currentIndex] == Integer.class) {
 			            	integerArray[intergerIndex++] = handleInt(jsonParser);
 			            }
 			            currentIndex++;
 			        }
 			        List<Object> structValues = new ArrayList<>();
 			        int strIdx = 0, decIdx = 0, tsIdx = 0, intIdx = 0 ;
-			        for (Class<?> type : metadata) {
+			        for (Class<?> type : structMetadata) {
 			            if (type == String.class) {
 			                structValues.add(stringArray[strIdx++]);
 			            } else if (type == BigDecimal.class) {
@@ -204,13 +208,14 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
 			            	structValues.add(integerArray[intIdx++]);
 			            }
 			        }
-
+			        //STATIC METADATA RELATED
 			            Struct struct = super.createStruct(
 			                Arrays.asList(
 			                    "description", "fc_reference_number", "amount_in_riyal", "approval_status_arabic_name",
 			                    "creation_date", "approval_date", "financial_claim_category_arabic_name",
 			                    "financial_claim_sub_category_arabic_name","randInt"
 			                ), structValues);
+			          //STATIC METADATA RELATED
 			            structList.add(struct);
 			        }
 			    }
