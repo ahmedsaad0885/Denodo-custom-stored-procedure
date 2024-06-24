@@ -25,9 +25,22 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
     private static final long serialVersionUID = 1L;
     
   //STATIC METADATA RELATED    
+    Class<?>[] metadata = new Class<?>[] {
+    	Integer.class,
+    	Struct.class,
+    	Timestamp.class,
+    	Boolean.class
+    };
     Class<?>[] structMetadata = new Class<?>[] {
-        String.class, String.class, BigDecimal.class, String.class, 
-        Timestamp.class, Timestamp.class, String.class, String.class,Integer.class
+        String.class,
+        String.class,
+        BigDecimal.class,
+        String.class, 
+        Timestamp.class,
+        Timestamp.class,
+        String.class,
+        String.class,
+        Integer.class
     };
   //STATIC METADATA RELATED
 
@@ -79,37 +92,39 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
             
 
             List<Struct> structList = new ArrayList<>();
-
+            
             while (jsonParser.nextToken() != JsonToken.END_ARRAY) {
                 if (jsonParser.currentToken() == JsonToken.START_OBJECT) {
-                    while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
+                	int metadataIndex = 0;
+                    while (jsonParser.nextToken() != JsonToken.END_OBJECT && metadataIndex < metadata.length) {
                         String fieldName = jsonParser.getCurrentName();
                         jsonParser.nextToken();
                         
+                        Class<?> currentType = metadata[metadataIndex++];
+                        
                         //Start Static
-                        switch (fieldName) {
-                        case "financial_claims_release_order_id":
-                        	financialClaimsReleaseOrderId = handleInt(jsonParser);break;
-                        case "last_source_update":
-                        	lastSourceUpdate= handleTimestamp(jsonParser, formatter);break;
-                        case "is_from_ro":
-                        	isFromRo=handleBoolean(jsonParser);break;
-                        case "financial_cliams_list":
+                        if (currentType == Integer.class) {
+                            financialClaimsReleaseOrderId = handleInt(jsonParser);
+                        } else if (currentType == Struct.class) {
                             if (jsonParser.currentToken() == JsonToken.START_ARRAY) {
-                            	structList = handleStruct(jsonParser, formatter);
-                                }
-                                break;
+                                structList = handleStruct(jsonParser, formatter);
+                            }
+                        } else if (currentType == Timestamp.class) {
+                            lastSourceUpdate = handleTimestamp(jsonParser, formatter);
+                        } else if (currentType == Boolean.class) {
+                            isFromRo = handleBoolean(jsonParser);
                         }
                         //END STATIC
                     }
-                
-            Object[] row = new Object[4];
+                metadataIndex=0;
+              //Start Static
+            Object[] row = new Object[metadata.length];
             row[0] = financialClaimsReleaseOrderId;            
             row[1] = createArray(structList, Types.STRUCT);
             row[2] = lastSourceUpdate;
             row[3] = isFromRo;
             getProcedureResultSet().addRow(row);
-           // financialClaimsList.clear();
+          //END STATIC
                 }
             }
 
