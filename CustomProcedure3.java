@@ -26,7 +26,7 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
     
     Class<?>[] metadata = new Class<?>[] {
         String.class, String.class, BigDecimal.class, String.class, 
-        Timestamp.class, Timestamp.class, String.class, String.class
+        Timestamp.class, Timestamp.class, String.class, String.class,Integer.class
     };
 
     public String getDescription() {
@@ -47,7 +47,8 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
                     new StoredProcedureParameter("creation_date", Types.TIMESTAMP, StoredProcedureParameter.DIRECTION_OUT),
                     new StoredProcedureParameter("approval_date", Types.TIMESTAMP, StoredProcedureParameter.DIRECTION_OUT),
                     new StoredProcedureParameter("financial_claim_category_arabic_name", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
-                    new StoredProcedureParameter("financial_claim_sub_category_arabic_name", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT)
+                    new StoredProcedureParameter("financial_claim_sub_category_arabic_name", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
+                    new StoredProcedureParameter("randInt", Types.INTEGER, StoredProcedureParameter.DIRECTION_OUT)
                 }),
             new StoredProcedureParameter("last_source_update", Types.TIMESTAMP, StoredProcedureParameter.DIRECTION_OUT),
             new StoredProcedureParameter("is_from_ro", Types.BOOLEAN, StoredProcedureParameter.DIRECTION_OUT)
@@ -65,19 +66,23 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
         
 
         try (JsonParser jsonParser = jsonFactory.createParser(new File(filePath))) {
+        	// START STATIC
             Integer financialClaimsReleaseOrderId = null;
             Timestamp lastSourceUpdate = null;
             Boolean isFromRo = null;
             
+            //END STATIC
+            
 
-            List<Struct> financialClaimsList = new ArrayList<>();
+            List<Struct> structList = new ArrayList<>();
 
             while (jsonParser.nextToken() != JsonToken.END_ARRAY) {
                 if (jsonParser.currentToken() == JsonToken.START_OBJECT) {
                     while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
                         String fieldName = jsonParser.getCurrentName();
                         jsonParser.nextToken();
-
+                        
+                        //Start Static
                         switch (fieldName) {
                         case "financial_claims_release_order_id":
                         	financialClaimsReleaseOrderId = handleInt(jsonParser);break;
@@ -87,15 +92,16 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
                         	isFromRo=handleBoolean(jsonParser);break;
                         case "financial_cliams_list":
                             if (jsonParser.currentToken() == JsonToken.START_ARRAY) {
-                            	financialClaimsList = parseStruct(jsonParser, formatter);
+                            	structList = handleStruct(jsonParser, formatter);
                                 }
                                 break;
                         }
+                        //END STATIC
                     }
                 
             Object[] row = new Object[4];
             row[0] = financialClaimsReleaseOrderId;            
-            row[1] = createArray(financialClaimsList, Types.STRUCT);
+            row[1] = createArray(structList, Types.STRUCT);
             row[2] = lastSourceUpdate;
             row[3] = isFromRo;
             getProcedureResultSet().addRow(row);
@@ -154,20 +160,20 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
         }
     }
     
-    private List<Struct> parseStruct(JsonParser jsonParser, DateTimeFormatter formatter){
+    private List<Struct> handleStruct(JsonParser jsonParser, DateTimeFormatter formatter){
     	
-
-        List<Struct> financialClaimsList = new ArrayList<>();
+        List<Struct> structList = new ArrayList<>();
         try {
 			while (jsonParser.nextToken() != JsonToken.END_ARRAY) {
 			    if (jsonParser.currentToken() == JsonToken.START_OBJECT) {
 			    	
 			    	
-			    	int stringIndex = 0, decimalIndex = 0, timestampIndex = 0;
+			    	int stringIndex = 0, decimalIndex = 0, timestampIndex = 0, intergerIndex = 0;
 
 			        String[] stringArray = new String[(int) Arrays.stream(metadata).filter(type -> type == String.class).count()];
 			        BigDecimal[] decimalArray = new BigDecimal[(int) Arrays.stream(metadata).filter(type -> type == BigDecimal.class).count()];
 			        Timestamp[] timestampArray = new Timestamp[(int) Arrays.stream(metadata).filter(type -> type == Timestamp.class).count()];
+			        Integer[] integerArray = new Integer[(int) Arrays.stream(metadata).filter(type -> type == Integer.class).count()];
 			    	
 			        int currentIndex = 0;
 			        while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
@@ -180,11 +186,13 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
 			                decimalArray[decimalIndex++] = handleDecimal(jsonParser);
 			            } else if (metadata[currentIndex] == Timestamp.class) {
 			                timestampArray[timestampIndex++] = handleTimestamp(jsonParser, formatter);
+			            }else if (metadata[currentIndex] == Integer.class) {
+			            	integerArray[intergerIndex++] = handleInt(jsonParser);
 			            }
 			            currentIndex++;
 			        }
 			        List<Object> structValues = new ArrayList<>();
-			        int strIdx = 0, decIdx = 0, tsIdx = 0;
+			        int strIdx = 0, decIdx = 0, tsIdx = 0, intIdx = 0 ;
 			        for (Class<?> type : metadata) {
 			            if (type == String.class) {
 			                structValues.add(stringArray[strIdx++]);
@@ -192,6 +200,8 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
 			                structValues.add(decimalArray[decIdx++]);
 			            } else if (type == Timestamp.class) {
 			                structValues.add(timestampArray[tsIdx++]);
+			            }else if (type == Integer.class) {
+			            	structValues.add(integerArray[intIdx++]);
 			            }
 			        }
 
@@ -199,9 +209,9 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
 			                Arrays.asList(
 			                    "description", "fc_reference_number", "amount_in_riyal", "approval_status_arabic_name",
 			                    "creation_date", "approval_date", "financial_claim_category_arabic_name",
-			                    "financial_claim_sub_category_arabic_name"
+			                    "financial_claim_sub_category_arabic_name","randInt"
 			                ), structValues);
-			            financialClaimsList.add(struct);
+			            structList.add(struct);
 			        }
 			    }
 		} catch (IOException e) {
@@ -211,7 +221,7 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-    	return financialClaimsList;
+    	return structList;
     }
     
     
