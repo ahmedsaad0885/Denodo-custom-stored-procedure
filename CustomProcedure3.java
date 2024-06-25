@@ -45,9 +45,10 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
                     "Integer"
             ),
             Arrays.asList(
-                "Integer",
-                
-                "String"
+            		"Integer",
+            	    "Boolean",
+            	    "String",
+            	    "String"
             ),
             Arrays.asList(
                 "String",
@@ -64,7 +65,7 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
                     "financial_claim_sub_category_arabic_name", "randInt"
             ),
             Arrays.asList(
-                "attr_a", "attr_c"
+            		"attr_a", "attr_b", "attr_c", "attr_d"
             ),
             Arrays.asList(
 
@@ -96,9 +97,11 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
 
                 new StoredProcedureParameter("financial_cliams_list2", Types.ARRAY, StoredProcedureParameter.DIRECTION_OUT,
                     true, new StoredProcedureParameter[]{
-                        new StoredProcedureParameter("attr_a", Types.INTEGER, StoredProcedureParameter.DIRECTION_OUT),
-                        new StoredProcedureParameter("attr_c", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT)
-                    }),
+                            new StoredProcedureParameter("attr_a", Types.INTEGER, StoredProcedureParameter.DIRECTION_OUT),
+                            new StoredProcedureParameter("attr_b", Types.BOOLEAN, StoredProcedureParameter.DIRECTION_OUT),
+                            new StoredProcedureParameter("attr_c", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
+                            new StoredProcedureParameter("attr_d", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT)
+                        }),
 
                 new StoredProcedureParameter("financial_cliams_list3", Types.ARRAY, StoredProcedureParameter.DIRECTION_OUT,
                     true, new StoredProcedureParameter[]{
@@ -189,17 +192,22 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
     
     private Boolean handleBoolean(JsonParser jsonParser) {
         try {
-            if (jsonParser.currentToken() == JsonToken.VALUE_NUMBER_INT) {
+            JsonToken currentToken = jsonParser.currentToken();
+            if (currentToken == JsonToken.VALUE_NUMBER_INT) {
                 return jsonParser.getIntValue() != 0;
-            } else if (jsonParser.currentToken() == JsonToken.VALUE_TRUE || jsonParser.currentToken() == JsonToken.VALUE_FALSE) {
-                return jsonParser.getBooleanValue();
+            } else if (currentToken == JsonToken.VALUE_TRUE) {
+                return true;
+            } else if (currentToken == JsonToken.VALUE_FALSE) {
+                return false;
             }
         } catch (Exception e) {
+            e.printStackTrace(); // Print stack trace for debugging
             return null;
         }
         return null;
     }
-    
+
+
     private Timestamp handleTimestamp(JsonParser jsonParser, DateTimeFormatter formatter) {
         try {
             return Timestamp.valueOf(LocalDateTime.parse(jsonParser.getText(), formatter));
@@ -240,6 +248,9 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
                             case "Integer":
                                 structValues.add(handleInt(jsonParser));
                                 break;
+                            case "Boolean":
+                            	structValues.add(handleBoolean(jsonParser));
+                            	break;
                             default:
                                 throw new StoredProcedureException("Unsupported type in struct metadata");
                         }
