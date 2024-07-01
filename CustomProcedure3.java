@@ -25,133 +25,127 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
     private static final long serialVersionUID = 1L;
     
     List<String> metadata = Arrays.asList(
-            "Integer",
-            "Struct",
-            "Struct",
-            "Struct",
-            "Timestamp",
-            "Boolean"
-        );
+        "Integer", "Long", "Struct", "Struct", "NestedStruct", "Timestamp", "Boolean"
+    );
 
-        List<List<String>> structMetadata = Arrays.asList(
-            Arrays.asList("String",
-                    "String",
-                    "BigDecimal",
-                    "String",
-                    "Timestamp",
-                    "Timestamp",
-                    "String",
-                    "String",
-                    "Integer"
-            ),
-            Arrays.asList(
-            		"Integer",
-            	    "Boolean",
-            	    "String",
-            	    "String"
-            ),
-            Arrays.asList(
-                "String",
-                "String",
-                "BigDecimal",
-                "String"
-            )
-        );
+    List<List<String>> structMetadata = Arrays.asList(
+        Arrays.asList(
+            "String", "String", "BigDecimal", "String", "Timestamp", "Timestamp", "String", "String", "Integer"
+        ),
+        Arrays.asList(
+            "Integer", "Boolean", "String", "String"
+        ),
+        Arrays.asList(
+            "String", "String", "BigDecimal", "String"
+        )
+    );
 
-        List<List<String>> structNames = Arrays.asList(
-            Arrays.asList(
-                    "description", "fc_reference_number", "amount_in_riyal", "approval_status_arabic_name",
-                    "creation_date", "approval_date", "financial_claim_category_arabic_name",
-                    "financial_claim_sub_category_arabic_name", "randInt"
-            ),
-            Arrays.asList(
-            		"attr_a", "attr_b", "attr_c", "attr_d"
-            ),
-            Arrays.asList(
+    List<List<String>> structNames = Arrays.asList(
+        Arrays.asList(
+            "attr_0", "attr_1", "attr_2", "attr_3", "attr_4", "attr_5", "attr_6", "attr_7", "attr_8"
+        ),
+        Arrays.asList(
+            "attr_a", "attr_b", "attr_c", "attr_d"
+        ),
+        Arrays.asList(
+            "attr_0", "attr_1", "attr_2", "attr_3"
+        )
+    );
 
-            	    "description", "fc_reference_number", "amount_in_riyal", "approval_status"
-            )
-        );
+    public String getDescription() {
+        return "Get data from JSON file";
+    }
 
-        public String getDescription() {
-            return "Get data from JSON file";
-        }
+    public StoredProcedureParameter[] getParameters() {
+        return new StoredProcedureParameter[]{
+            new StoredProcedureParameter("filePath", Types.VARCHAR, StoredProcedureParameter.DIRECTION_IN),
+            new StoredProcedureParameter("financial_claims_release_order_id", Types.INTEGER, StoredProcedureParameter.DIRECTION_OUT),
+            new StoredProcedureParameter("longval", Types.BIGINT, StoredProcedureParameter.DIRECTION_OUT),
 
-        public StoredProcedureParameter[] getParameters() {
-            return new StoredProcedureParameter[]{
-                new StoredProcedureParameter("filePath", Types.VARCHAR, StoredProcedureParameter.DIRECTION_IN),
-                new StoredProcedureParameter("financial_claims_release_order_id", Types.INTEGER, StoredProcedureParameter.DIRECTION_OUT),
+            new StoredProcedureParameter("financial_cliams_list", Types.ARRAY, StoredProcedureParameter.DIRECTION_OUT,
+                true, new StoredProcedureParameter[]{
+                    new StoredProcedureParameter("attr_0", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
+                    new StoredProcedureParameter("attr_1", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
+                    new StoredProcedureParameter("attr_2", Types.DECIMAL, StoredProcedureParameter.DIRECTION_OUT),
+                    new StoredProcedureParameter("attr_3", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
+                    new StoredProcedureParameter("attr_4", Types.TIMESTAMP, StoredProcedureParameter.DIRECTION_OUT),
+                    new StoredProcedureParameter("attr_5", Types.TIMESTAMP, StoredProcedureParameter.DIRECTION_OUT),
+                    new StoredProcedureParameter("attr_6", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
+                    new StoredProcedureParameter("attr_7", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
+                    new StoredProcedureParameter("attr_8", Types.INTEGER, StoredProcedureParameter.DIRECTION_OUT)
+                }),
 
-                new StoredProcedureParameter("financial_cliams_list", Types.ARRAY, StoredProcedureParameter.DIRECTION_OUT,
-                    true, new StoredProcedureParameter[]{
-                            new StoredProcedureParameter("description", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
-                            new StoredProcedureParameter("fc_reference_number", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
-                            new StoredProcedureParameter("amount_in_riyal", Types.DECIMAL, StoredProcedureParameter.DIRECTION_OUT),
-                            new StoredProcedureParameter("approval_status_arabic_name", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
-                            new StoredProcedureParameter("creation_date", Types.TIMESTAMP, StoredProcedureParameter.DIRECTION_OUT),
-                            new StoredProcedureParameter("approval_date", Types.TIMESTAMP, StoredProcedureParameter.DIRECTION_OUT),
-                            new StoredProcedureParameter("financial_claim_category_arabic_name", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
-                            new StoredProcedureParameter("financial_claim_sub_category_arabic_name", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
-                            new StoredProcedureParameter("randInt", Types.INTEGER, StoredProcedureParameter.DIRECTION_OUT)
-                        }),
+            new StoredProcedureParameter("financial_cliams_list2", Types.ARRAY, StoredProcedureParameter.DIRECTION_OUT,
+                true, new StoredProcedureParameter[]{
+                    new StoredProcedureParameter("attr_a", Types.INTEGER, StoredProcedureParameter.DIRECTION_OUT),
+                    new StoredProcedureParameter("attr_b", Types.BOOLEAN, StoredProcedureParameter.DIRECTION_OUT),
+                    new StoredProcedureParameter("attr_c", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
+                    new StoredProcedureParameter("attr_d", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT)
+                }),
 
-                new StoredProcedureParameter("financial_cliams_list2", Types.ARRAY, StoredProcedureParameter.DIRECTION_OUT,
-                    true, new StoredProcedureParameter[]{
-                            new StoredProcedureParameter("attr_a", Types.INTEGER, StoredProcedureParameter.DIRECTION_OUT),
-                            new StoredProcedureParameter("attr_b", Types.BOOLEAN, StoredProcedureParameter.DIRECTION_OUT),
-                            new StoredProcedureParameter("attr_c", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
-                            new StoredProcedureParameter("attr_d", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT)
-                        }),
+            new StoredProcedureParameter("financial_cliams_list3", Types.ARRAY, StoredProcedureParameter.DIRECTION_OUT,
+                true, new StoredProcedureParameter[]{
+                    new StoredProcedureParameter("attr_0", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
+                    new StoredProcedureParameter("attr_1", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
+                    new StoredProcedureParameter("attr_2", Types.DECIMAL, StoredProcedureParameter.DIRECTION_OUT),
+                    new StoredProcedureParameter("attr_3", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT)
+                }),
 
-                new StoredProcedureParameter("financial_cliams_list3", Types.ARRAY, StoredProcedureParameter.DIRECTION_OUT,
-                    true, new StoredProcedureParameter[]{
-                            new StoredProcedureParameter("description", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
-                            new StoredProcedureParameter("fc_reference_number", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
-                            new StoredProcedureParameter("amount_in_riyal", Types.DECIMAL, StoredProcedureParameter.DIRECTION_OUT),
-                            new StoredProcedureParameter("approval_status", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT)
-                        }),
-
-                new StoredProcedureParameter("last_source_update", Types.TIMESTAMP, StoredProcedureParameter.DIRECTION_OUT),
-                new StoredProcedureParameter("is_from_ro", Types.BOOLEAN, StoredProcedureParameter.DIRECTION_OUT)
-            };
-        }
+            new StoredProcedureParameter("last_source_update", Types.TIMESTAMP, StoredProcedureParameter.DIRECTION_OUT),
+            new StoredProcedureParameter("is_from_ro", Types.BOOLEAN, StoredProcedureParameter.DIRECTION_OUT)
+        };
+    }
 
     @Override
-    
     protected void doCall(Object[] inputValues) throws StoredProcedureException {
         String filePath = (String) inputValues[0];
         JsonFactory jsonFactory = new JsonFactory();
 
-        DateTimeFormatter formatter = setTimeFormatter();        
-        
+        DateTimeFormatter formatter = setTimeFormatter();
 
         try (JsonParser jsonParser = jsonFactory.createParser(new File(filePath))) {
-            
 
-        	List<List<Struct>> structLists = new ArrayList<>();
-            for (int i = 0; i < metadata.size(); i++) {
-                structLists.add(new ArrayList<>());
-            }//TODO change
-            
             while (jsonParser.nextToken() != JsonToken.END_ARRAY) {
                 if (jsonParser.currentToken() == JsonToken.START_OBJECT) {
-                    int metadataIndex = 0 , structIndex=0 ;
+                    int metadataIndex = 0, structIndex = 0;
                     Object[] row = new Object[metadata.size()];
 
                     while (jsonParser.nextToken() != JsonToken.END_OBJECT && metadataIndex < metadata.size()) {
                         jsonParser.nextToken();
+
+                        if (metadataIndex >= metadata.size()) {
+                            throw new StoredProcedureException("Metadata index out of bounds");
+                        }
 
                         String currentType = metadata.get(metadataIndex);
                         switch (currentType) {
                             case "Integer":
                                 row[metadataIndex] = handleInt(jsonParser);
                                 break;
+                            case "Long":
+                                row[metadataIndex] = handleLong(jsonParser);
+                                break;
+                            case "BigDecimal":
+                                row[metadataIndex] = handleDecimal(jsonParser);
+                                break;
                             case "Struct":
                                 if (jsonParser.currentToken() == JsonToken.START_ARRAY) {
-                                	 
+                                    if (structIndex >= structMetadata.size()) {
+                                        throw new StoredProcedureException("Struct index out of bounds at Struct");
+                                    }
                                     List<Struct> structList = handleStruct(jsonParser, formatter, structMetadata.get(structIndex), structNames.get(structIndex));
-									row[metadataIndex] = createArray(structList, Types.STRUCT);
-									structIndex++;
+                                    row[metadataIndex] = createArray(structList, Types.STRUCT);
+                                    structIndex++;
+                                }
+                                break;
+                            case "NestedStruct":
+                                if (jsonParser.currentToken() == JsonToken.START_ARRAY) {
+                                    if (structIndex >= structMetadata.size()) {
+                                        throw new StoredProcedureException("Struct index out of bounds at NestedStruct");
+                                    }
+                                    List<Struct> nestedStructList = handleNestedStruct(jsonParser, formatter, structMetadata.get(structIndex), structNames.get(structIndex));
+                                    row[metadataIndex] = createArray(nestedStructList, Types.STRUCT);
+                                    structIndex++;
                                 }
                                 break;
                             case "Timestamp":
@@ -159,6 +153,9 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
                                 break;
                             case "Boolean":
                                 row[metadataIndex] = handleBoolean(jsonParser);
+                                break;
+                            case "String":
+                                row[metadataIndex] = handleText(jsonParser);
                                 break;
                             default:
                                 throw new StoredProcedureException("Unsupported type in metadata");
@@ -172,6 +169,66 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
         } catch (IOException e) {
             throw new StoredProcedureException("Error reading JSON file", e);
         }
+    }
+
+    private List<Struct> handleNestedStruct(JsonParser jsonParser, DateTimeFormatter formatter, List<String> structMetadata, List<String> structNames) throws StoredProcedureException {
+        List<Struct> nestedStructList = new ArrayList<>();
+        try {
+            while (jsonParser.nextToken() != JsonToken.END_ARRAY) {
+                if (jsonParser.currentToken() == JsonToken.START_OBJECT) {
+                    List<Object> structValues = new ArrayList<>();
+                    int currentIndex = 0;
+                    while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
+                        jsonParser.nextToken();
+
+                        if (currentIndex >= structMetadata.size()) {
+                            throw new StoredProcedureException("Nested struct metadata index out of bounds");
+                        }
+
+                        String type = structMetadata.get(currentIndex);
+                        switch (type) {
+                            case "String":
+                                structValues.add(handleText(jsonParser));
+                                break;
+                            case "BigDecimal":
+                                structValues.add(handleDecimal(jsonParser));
+                                break;
+                            case "Timestamp":
+                                structValues.add(handleTimestamp(jsonParser, formatter));
+                                break;
+                            case "Integer":
+                                structValues.add(handleInt(jsonParser));
+                                break;
+                            case "Long":
+                                structValues.add(handleLong(jsonParser));
+                                break;
+                            case "Boolean":
+                                structValues.add(handleBoolean(jsonParser));
+                                break;
+                            default:
+                                throw new StoredProcedureException("Unsupported type in nested struct metadata");
+                        }
+                        currentIndex++;
+                    }
+                    Struct struct = super.createStruct(structNames, structValues);
+                    nestedStructList.add(struct);
+                }
+            }
+        } catch (IOException | SQLException e) {
+            throw new StoredProcedureException("Error processing nested struct", e);
+        }
+        return nestedStructList;
+    }
+
+
+
+    private Object createArray(List<Struct> elements, int type) throws StoredProcedureException {
+        return super.createArray(elements, type);
+    }
+
+    private Object createArray(Object[] elements, int type) throws StoredProcedureException {
+        List<Object> elementList = Arrays.asList(elements);
+        return super.createArray(elementList, type);
     }
 
     private String handleText(JsonParser jsonParser) {
@@ -201,12 +258,10 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
                 return false;
             }
         } catch (Exception e) {
-            e.printStackTrace(); // Print stack trace for debugging
             return null;
         }
         return null;
     }
-
 
     private Timestamp handleTimestamp(JsonParser jsonParser, DateTimeFormatter formatter) {
         try {
@@ -224,7 +279,15 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
         }
     }
     
-    private List<Struct> handleStruct(JsonParser jsonParser, DateTimeFormatter formatter, List<String> structMetadata, List<String> structNames) {
+    private Long handleLong(JsonParser jsonParser) {
+        try {
+            return jsonParser.getLongValue();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private List<Struct> handleStruct(JsonParser jsonParser, DateTimeFormatter formatter, List<String> structMetadata, List<String> structNames) throws StoredProcedureException {
         List<Struct> structList = new ArrayList<>();
         try {
             while (jsonParser.nextToken() != JsonToken.END_ARRAY) {
@@ -233,6 +296,10 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
                     int currentIndex = 0;
                     while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
                         jsonParser.nextToken();
+
+                        if (currentIndex >= structMetadata.size()) {
+                            throw new StoredProcedureException("Struct metadata index out of bounds");
+                        }
 
                         String type = structMetadata.get(currentIndex);
                         switch (type) {
@@ -248,9 +315,11 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
                             case "Integer":
                                 structValues.add(handleInt(jsonParser));
                                 break;
+                            case "Long":
+                                structValues.add(handleLong(jsonParser));
                             case "Boolean":
-                            	structValues.add(handleBoolean(jsonParser));
-                            	break;
+                                structValues.add(handleBoolean(jsonParser));
+                                break;
                             default:
                                 throw new StoredProcedureException("Unsupported type in struct metadata");
                         }
@@ -265,25 +334,18 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
         }
         return structList;
     }
-    
-    
-    private DateTimeFormatter setTimeFormatter () {
-    	return new DateTimeFormatterBuilder()
-                .appendPattern("yyyy-MM-dd HH:mm:ss")
-                .optionalStart()
-                .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
-                .optionalEnd()
-                .toFormatter();
-    	
+  
+    private DateTimeFormatter setTimeFormatter() {
+        return new DateTimeFormatterBuilder()
+            .appendPattern("yyyy-MM-dd HH:mm:ss")
+            .optionalStart()
+            .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
+            .optionalEnd()
+            .toFormatter();
     }
-    
-    
+
     @Override
     public String getName() {
         return "file_reader";
-    }
-
-    private Object createArray(List<Struct> elements, int type) throws StoredProcedureException {
-        return super.createArray(elements, type);
     }
 }
