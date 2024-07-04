@@ -20,89 +20,140 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-
-
 public class CustomProcedure3 extends AbstractStoredProcedure {
 
     private static final long serialVersionUID = 1L;
     
-    List<String> metadata = Arrays.asList(
-        "INTEGER", "BIGINT", "ARRAY", "ARRAY", "ARRAY", "TIMESTAMP", "BOOLEAN"
+    
+    //metadata start
+        List<String> metadata = Arrays.asList(
+        "INTEGER", "VARCHAR", "VARCHAR", "VARCHAR", "VARCHAR", "TIMESTAMP", "VARCHAR",
+        "VARCHAR", "TIMESTAMP", "VARCHAR", "VARCHAR", "VARCHAR", "VARCHAR", "VARCHAR",
+        "VARCHAR", "VARCHAR", "VARCHAR", "VARCHAR", "VARCHAR", "VARCHAR", "DECIMAL",
+        "BOOLEAN", "VARCHAR", "INTEGER", "VARCHAR", "VARCHAR", "DECIMAL", "INTEGER",
+        "VARCHAR", "TIMESTAMP", "VARCHAR", "VARCHAR", "ARRAY", "ARRAY", "ARRAY",
+        "TIMESTAMP", "VARCHAR", "BOOLEAN", "TIMESTAMP", "TIMESTAMP", "DECIMAL",
+        "ARRAY"
+    );
+
+    List<String> metadataNames = Arrays.asList(
+        "Integer", "String1", "String2", "String3", "String4", "Timestamp1", "String5",
+        "String6", "Timestamp2", "String7", "String8", "String9", "String10", "String11",
+        "String12", "String13", "String14", "String15", "String16", "String17", "BigDecimal1",
+        "Boolean1", "String18", "Integer2", "String19", "String20", "BigDecimal2", "Integer3",
+        "String21", "Timestamp3", "String22", "String23", "Struct1", "Struct2", "Struct3",
+        "Timestamp4", "String24", "Boolean2", "Timestamp5", "Timestamp6", "BigDecimal3",
+        "Struct4"
     );
 
     List<List<String>> structMetadata = Arrays.asList(
-        Arrays.asList(
-            "VARCHAR", "VARCHAR", "DECIMAL", "VARCHAR", "TIMESTAMP", "TIMESTAMP", "VARCHAR", "VARCHAR", "INTEGER"
-        ),
-        Arrays.asList(
-            "INTEGER", "BOOLEAN", "VARCHAR", "VARCHAR"
-        ),
-        Arrays.asList(
-            "VARCHAR", "VARCHAR", "DECIMAL", "VARCHAR"
-        )
+        Arrays.asList("VARCHAR", "TIMESTAMP", "VARCHAR", "DECIMAL", "VARCHAR", "TIMESTAMP"),
+        Arrays.asList("VARCHAR", "BOOLEAN", "INTEGER", "VARCHAR", "VARCHAR", "VARCHAR", "VARCHAR", "VARCHAR", "DECIMAL", "VARCHAR", "DECIMAL", "VARCHAR", "BOOLEAN", "TIMESTAMP", "BIGINT", "INTEGER", "VARCHAR"),
+        Arrays.asList("VARCHAR", "VARCHAR", "BOOLEAN", "DECIMAL"),
+        Arrays.asList("VARCHAR", "BOOLEAN", "VARCHAR", "VARCHAR", "VARCHAR", "BOOLEAN", "VARCHAR", "VARCHAR")
     );
 
     List<List<String>> structNames = Arrays.asList(
-        Arrays.asList(
-            "attr_0", "attr_1", "attr_2", "attr_3", "attr_4", "attr_5", "attr_6", "attr_7", "attr_8"
-        ),
-        Arrays.asList(
-            "attr_a", "attr_b", "attr_c", "attr_d"
-        ),
-        Arrays.asList(
-            "attr_0", "attr_1", "attr_2", "attr_3"
-        )
+        Arrays.asList("fc_reference_number", "creation_date", "description", "amount_in_riyal", "approval_status_arabic_name", "approval_date"),
+        Arrays.asList("payment_order_number", "is_main", "payment_method_type", "payment_method", "vendor_name", "vendor_id", "commercial_registration_number", "iban", "amount", "amount_for", "amount_after_exchange", "currency_name", "is_success", "check_date", "check_number", "is_deduction", "code700"),
+        Arrays.asList("project_name", "project_number", "is_gfs", "amount_in_riyal"),
+        Arrays.asList("vendor_id", "is_main_vendor", "vendor_name", "commercial_registration_number", "vendor_type", "is_foreign", "nationality_name", "code700")
     );
-
+    
+    //metadata end
     public String getDescription() {
         return "Get data from JSON file";
     }
 
     public StoredProcedureParameter[] getParameters() {
-        return new StoredProcedureParameter[]{
-            new StoredProcedureParameter("filePath", Types.VARCHAR, StoredProcedureParameter.DIRECTION_IN),
-            new StoredProcedureParameter("financial_claims_release_order_id", Types.INTEGER, StoredProcedureParameter.DIRECTION_OUT),
-            new StoredProcedureParameter("longval", Types.BIGINT, StoredProcedureParameter.DIRECTION_OUT),
+    	
+    	//metadata start
+        List<String> metadata = Arrays.asList(
+                "INTEGER", "VARCHAR", "VARCHAR", "VARCHAR", "VARCHAR", "TIMESTAMP", "VARCHAR",
+                "VARCHAR", "TIMESTAMP", "VARCHAR", "VARCHAR", "VARCHAR", "VARCHAR", "VARCHAR",
+                "VARCHAR", "VARCHAR", "VARCHAR", "VARCHAR", "VARCHAR", "VARCHAR", "DECIMAL",
+                "BOOLEAN", "VARCHAR", "INTEGER", "VARCHAR", "VARCHAR", "DECIMAL", "INTEGER",
+                "VARCHAR", "TIMESTAMP", "VARCHAR", "VARCHAR", "ARRAY", "ARRAY", "ARRAY",
+                "TIMESTAMP", "VARCHAR", "BOOLEAN", "TIMESTAMP", "TIMESTAMP", "DECIMAL",
+                "ARRAY"
+            );
 
-            new StoredProcedureParameter("financial_cliams_list", Types.ARRAY, StoredProcedureParameter.DIRECTION_OUT,
-                true, new StoredProcedureParameter[]{
-                    new StoredProcedureParameter("attr_0", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
-                    new StoredProcedureParameter("attr_1", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
-                    new StoredProcedureParameter("attr_2", Types.DECIMAL, StoredProcedureParameter.DIRECTION_OUT),
-                    new StoredProcedureParameter("attr_3", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
-                    new StoredProcedureParameter("attr_4", Types.TIMESTAMP, StoredProcedureParameter.DIRECTION_OUT),
-                    new StoredProcedureParameter("attr_5", Types.TIMESTAMP, StoredProcedureParameter.DIRECTION_OUT),
-                    new StoredProcedureParameter("attr_6", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
-                    new StoredProcedureParameter("attr_7", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
-                    new StoredProcedureParameter("attr_8", Types.INTEGER, StoredProcedureParameter.DIRECTION_OUT)
-                }),
+            List<String> metadataNames = Arrays.asList(
+                "Integer", "String1", "String2", "String3", "String4", "Timestamp1", "String5",
+                "String6", "Timestamp2", "String7", "String8", "String9", "String10", "String11",
+                "String12", "String13", "String14", "String15", "String16", "String17", "BigDecimal1",
+                "Boolean1", "String18", "Integer2", "String19", "String20", "BigDecimal2", "Integer3",
+                "String21", "Timestamp3", "String22", "String23", "Struct1", "Struct2", "Struct3",
+                "Timestamp4", "String24", "Boolean2", "Timestamp5", "Timestamp6", "BigDecimal3",
+                "Struct4"
+            );
 
-            new StoredProcedureParameter("financial_cliams_list2", Types.ARRAY, StoredProcedureParameter.DIRECTION_OUT,
-                true, new StoredProcedureParameter[]{
-                    new StoredProcedureParameter("attr_a", Types.INTEGER, StoredProcedureParameter.DIRECTION_OUT),
-                    new StoredProcedureParameter("attr_b", Types.BOOLEAN, StoredProcedureParameter.DIRECTION_OUT),
-                    new StoredProcedureParameter("attr_c", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
-                    new StoredProcedureParameter("attr_d", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT)
-                }),
+            List<List<String>> structMetadata = Arrays.asList(
+                Arrays.asList("VARCHAR", "TIMESTAMP", "VARCHAR", "DECIMAL", "VARCHAR", "TIMESTAMP"),
+                Arrays.asList("VARCHAR", "BOOLEAN", "INTEGER", "VARCHAR", "VARCHAR", "VARCHAR", "VARCHAR", "VARCHAR", "DECIMAL", "VARCHAR", "DECIMAL", "VARCHAR", "BOOLEAN", "TIMESTAMP", "BIGINT", "INTEGER", "VARCHAR"),
+                Arrays.asList("VARCHAR", "VARCHAR", "BOOLEAN", "DECIMAL"),
+                Arrays.asList("VARCHAR", "BOOLEAN", "VARCHAR", "VARCHAR", "VARCHAR", "BOOLEAN", "VARCHAR", "VARCHAR")
+            );
 
-            new StoredProcedureParameter("financial_cliams_list3", Types.ARRAY, StoredProcedureParameter.DIRECTION_OUT,
-                true, new StoredProcedureParameter[]{
-                    new StoredProcedureParameter("attr_0", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
-                    new StoredProcedureParameter("attr_1", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT),
-                    new StoredProcedureParameter("attr_2", Types.DECIMAL, StoredProcedureParameter.DIRECTION_OUT),
-                    new StoredProcedureParameter("attr_3", Types.VARCHAR, StoredProcedureParameter.DIRECTION_OUT)
-                }),
+            List<List<String>> structNames = Arrays.asList(
+                Arrays.asList("fc_reference_number", "creation_date", "description", "amount_in_riyal", "approval_status_arabic_name", "approval_date"),
+                Arrays.asList("payment_order_number", "is_main", "payment_method_type", "payment_method", "vendor_name", "vendor_id", "commercial_registration_number", "iban", "amount", "amount_for", "amount_after_exchange", "currency_name", "is_success", "check_date", "check_number", "is_deduction", "code700"),
+                Arrays.asList("project_name", "project_number", "is_gfs", "amount_in_riyal"),
+                Arrays.asList("vendor_id", "is_main_vendor", "vendor_name", "commercial_registration_number", "vendor_type", "is_foreign", "nationality_name", "code700")
+            );
+//metadata end
+    	
+    	
+        List<StoredProcedureParameter> parameters = new ArrayList<>();
+        int structIndex =0;
+        
+        JsonHandler jsonHandler = new JsonHandler();
+        if (metadata.size() != metadataNames.size()) {
+            throw new IllegalStateException("Metadata and metadataNames lists must have the same size");
+        }
 
-            new StoredProcedureParameter("last_source_update", Types.TIMESTAMP, StoredProcedureParameter.DIRECTION_OUT),
-            new StoredProcedureParameter("is_from_ro", Types.BOOLEAN, StoredProcedureParameter.DIRECTION_OUT)
-        };
+
+            parameters.add(new StoredProcedureParameter("filePath", Types.VARCHAR, StoredProcedureParameter.DIRECTION_IN));
+
+        for (int i = 0; i < metadata.size(); i++) {
+            String currentType = metadata.get(i);
+            String currentName = metadataNames.get(i);
+
+            if (currentType.equals("ARRAY")) {
+                List<StoredProcedureParameter> structParameters = new ArrayList<>();
+                List<String> currentStructNames = structNames.get(structIndex);
+                List<String> currentStructMetadata = structMetadata.get(structIndex);
+
+                for (int j = 0; j < currentStructNames.size(); j++) {
+                    String structField = currentStructNames.get(j);
+                    int sqlType =jsonHandler.getSqlType(currentStructMetadata.get(j));
+                    structParameters.add(new StoredProcedureParameter(structField, sqlType, StoredProcedureParameter.DIRECTION_OUT));
+                }
+
+                parameters.add(new StoredProcedureParameter(
+                    currentName,
+                    Types.ARRAY,
+                    StoredProcedureParameter.DIRECTION_OUT,
+                    true,
+                    structParameters.toArray(new StoredProcedureParameter[0])
+                ));
+
+                structIndex++;
+            } else {
+                int sqlType =jsonHandler.getSqlType(currentType);
+                parameters.add(new StoredProcedureParameter(currentName, sqlType, StoredProcedureParameter.DIRECTION_OUT));
+            }
+        }
+
+        return parameters.toArray(new StoredProcedureParameter[0]);
     }
+
 
     @Override
     protected void doCall(Object[] inputValues) throws StoredProcedureException {
         String filePath = (String) inputValues[0];
         JsonFactory jsonFactory = new JsonFactory();
-        JsonHandler jsonHandler= new JsonHandler();
+        JsonHandler jsonHandler = new JsonHandler();
 
         DateTimeFormatter formatter = jsonHandler.setTimeFormatter();
 
@@ -163,9 +214,9 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
         }
     }
 
-	@Override
-	public String getName() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+
+    @Override
+    public String getName() {
+        return "file_reader";
+    }
 }

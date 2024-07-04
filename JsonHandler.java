@@ -150,7 +150,26 @@ public class JsonHandler {
             .optionalEnd()
             .toFormatter();
     }
-
+    public int getSqlType(String type) {
+        switch (type) {
+            case "VARCHAR":
+                return Types.VARCHAR;
+            case "DECIMAL":
+                return Types.DECIMAL;
+            case "TIMESTAMP":
+                return Types.TIMESTAMP;
+            case "INTEGER":
+                return Types.INTEGER;
+            case "BIGINT":
+                return Types.BIGINT;
+            case "BOOLEAN":
+                return Types.BOOLEAN;
+            case "ARRAY":
+            	return Types.ARRAY;
+            default:
+                throw new IllegalArgumentException("Unsupported type: " + type);
+        }
+    }
 
 
 
