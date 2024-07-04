@@ -20,23 +20,25 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+
+
 public class CustomProcedure3 extends AbstractStoredProcedure {
 
     private static final long serialVersionUID = 1L;
     
     List<String> metadata = Arrays.asList(
-        "Integer", "Long", "Struct", "Struct", "Struct", "Timestamp", "Boolean"
+        "INTEGER", "BIGINT", "ARRAY", "ARRAY", "ARRAY", "TIMESTAMP", "BOOLEAN"
     );
 
     List<List<String>> structMetadata = Arrays.asList(
         Arrays.asList(
-            "String", "String", "BigDecimal", "String", "Timestamp", "Timestamp", "String", "String", "Integer"
+            "VARCHAR", "VARCHAR", "DECIMAL", "VARCHAR", "TIMESTAMP", "TIMESTAMP", "VARCHAR", "VARCHAR", "INTEGER"
         ),
         Arrays.asList(
-            "Integer", "Boolean", "String", "String"
+            "INTEGER", "BOOLEAN", "VARCHAR", "VARCHAR"
         ),
         Arrays.asList(
-            "String", "String", "BigDecimal", "String"
+            "VARCHAR", "VARCHAR", "DECIMAL", "VARCHAR"
         )
     );
 
@@ -100,12 +102,13 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
     protected void doCall(Object[] inputValues) throws StoredProcedureException {
         String filePath = (String) inputValues[0];
         JsonFactory jsonFactory = new JsonFactory();
+        JsonHandler jsonHandler= new JsonHandler();
 
-        DateTimeFormatter formatter = setTimeFormatter();
+        DateTimeFormatter formatter = jsonHandler.setTimeFormatter();
 
         try (JsonParser jsonParser = jsonFactory.createParser(new File(filePath))) {
             while (jsonParser.nextToken() != JsonToken.END_ARRAY) {
-                if (jsonParser.currentToken() == JsonToken.START_OBJECT) {
+                if (jsonParser.currentToken() == JsonToken.START_OBJECT) {// ensures that only JSON objects are processed
                     int metadataIndex = 0, structIndex = 0;
                     Object[] row = new Object[metadata.size()];
 
@@ -118,33 +121,33 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
 
                         String currentType = metadata.get(metadataIndex);
                         switch (currentType) {
-                            case "Integer":
-                                row[metadataIndex] = handleInt(jsonParser);
+                            case "INTEGER":
+                                row[metadataIndex] = jsonHandler.handleInt(jsonParser);
                                 break;
-                            case "Long":
-                                row[metadataIndex] = handleLong(jsonParser);
+                            case "BIGINT":
+                                row[metadataIndex] = jsonHandler.handleLong(jsonParser);
                                 break;
-                            case "BigDecimal":
-                                row[metadataIndex] = handleDecimal(jsonParser);
+                            case "DECIMAL":
+                                row[metadataIndex] = jsonHandler.handleDecimal(jsonParser);
                                 break;
-                            case "Struct":
-                                if (jsonParser.currentToken() == JsonToken.START_ARRAY) {
+                            case "ARRAY":
+                                if (jsonParser.currentToken() == JsonToken.START_ARRAY) {//allows the method to identify when it encounters a nested array within a struct and It enables the method to recursively process nested structures,
                                     if (structIndex >= structMetadata.size()) {
                                         throw new StoredProcedureException("Struct index out of bounds at Struct");
                                     }
-                                    List<Struct> structList = handleStruct(jsonParser, formatter, structMetadata.get(structIndex), structNames.get(structIndex));
+                                    List<Struct> structList = jsonHandler.handleStruct(jsonParser, formatter, structMetadata.get(structIndex), structNames.get(structIndex));
                                     row[metadataIndex] = createArray(structList, Types.STRUCT);
                                     structIndex++;
                                 }
                                 break;
-                            case "Timestamp":
-                                row[metadataIndex] = handleTimestamp(jsonParser, formatter);
+                            case "TIMESTAMP":
+                                row[metadataIndex] = jsonHandler.handleTimestamp(jsonParser, formatter);
                                 break;
-                            case "Boolean":
-                                row[metadataIndex] = handleBoolean(jsonParser);
+                            case "BOOLEAN":
+                                row[metadataIndex] = jsonHandler.handleBoolean(jsonParser);
                                 break;
-                            case "String":
-                                row[metadataIndex] = handleText(jsonParser);
+                            case "VARCHAR":
+                                row[metadataIndex] = jsonHandler.handleText(jsonParser);
                                 break;
                             default:
                                 throw new StoredProcedureException("Unsupported type in metadata");
@@ -160,137 +163,9 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
         }
     }
 
-    private List<Struct> handleStruct(JsonParser jsonParser, DateTimeFormatter formatter, List<String> structMetadata, List<String> structNames) throws StoredProcedureException {
-        List<Struct> structList = new ArrayList<>();
-        try {
-            while (jsonParser.nextToken() != JsonToken.END_ARRAY) {
-                if (jsonParser.currentToken() == JsonToken.START_OBJECT) {
-                    List<Object> structValues = new ArrayList<>();
-                    int currentIndex = 0;
-                    while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
-                        jsonParser.nextToken();
-
-                        if (currentIndex >= structMetadata.size()) {
-                            throw new StoredProcedureException("Struct metadata index out of bounds");
-                        }
-
-                        String type = structMetadata.get(currentIndex);
-                        switch (type) {
-                            case "String":
-                                structValues.add(handleText(jsonParser));
-                                break;
-                            case "BigDecimal":
-                                structValues.add(handleDecimal(jsonParser));
-                                break;
-                            case "Timestamp":
-                                structValues.add(handleTimestamp(jsonParser, formatter));
-                                break;
-                            case "Integer":
-                                structValues.add(handleInt(jsonParser));
-                                break;
-                            case "Long":
-                                structValues.add(handleLong(jsonParser));
-                                break;
-                            case "Boolean":
-                                structValues.add(handleBoolean(jsonParser));
-                                break;
-                            case "Struct":
-                                if (jsonParser.currentToken() == JsonToken.START_ARRAY) {
-                                    List<Struct> nestedStructList = handleStruct(jsonParser, formatter, structMetadata, structNames);
-                                    structValues.add(createArray(nestedStructList, Types.STRUCT));
-                                }
-                                break;
-                            default:
-                                throw new StoredProcedureException("Unsupported type in struct metadata");
-                        }
-                        currentIndex++;
-                    }
-                    Struct struct = super.createStruct(structNames, structValues);
-                    structList.add(struct);
-                }
-            }
-        } catch (IOException | SQLException e) {
-            throw new StoredProcedureException("Error processing struct", e);
-        }
-        return structList;
-    }
-
-    private Object createArray(List<Struct> elements, int type) throws StoredProcedureException {
-        return super.createArray(elements, type);
-    }
-
-    private Object createArray(Object[] elements, int type) throws StoredProcedureException {
-        List<Object> elementList = Arrays.asList(elements);
-        return super.createArray(elementList, type);
-    }
-
-    private String handleText(JsonParser jsonParser) {
-        try {
-            return jsonParser.getText();
-        } catch (Exception e) {
-            return null;
-        }
-    }
-    
-    private BigDecimal handleDecimal(JsonParser jsonParser) {
-        try {
-            return jsonParser.getDecimalValue();
-        } catch (Exception e) {
-            return null;
-        }
-    }
-    
-    private Boolean handleBoolean(JsonParser jsonParser) {
-        try {
-            JsonToken currentToken = jsonParser.currentToken();
-            if (currentToken == JsonToken.VALUE_NUMBER_INT) {
-                return jsonParser.getIntValue() != 0;
-            } else if (currentToken == JsonToken.VALUE_TRUE) {
-                return true;
-            } else if (currentToken == JsonToken.VALUE_FALSE) {
-                return false;
-            }
-        } catch (Exception e) {
-            return null;
-        }
-        return null;
-    }
-
-    private Timestamp handleTimestamp(JsonParser jsonParser, DateTimeFormatter formatter) {
-        try {
-            return Timestamp.valueOf(LocalDateTime.parse(jsonParser.getText(), formatter));
-        } catch (Exception e) {
-            return null;
-        }
-    }
-    
-    private Integer handleInt(JsonParser jsonParser) {
-        try {
-            return jsonParser.getIntValue();
-        } catch (Exception e) {
-            return null;
-        }
-    }
-    
-    private Long handleLong(JsonParser jsonParser) {
-        try {
-            return jsonParser.getLongValue();
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private DateTimeFormatter setTimeFormatter() {
-        return new DateTimeFormatterBuilder()
-            .appendPattern("yyyy-MM-dd HH:mm:ss")
-            .optionalStart()
-            .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
-            .optionalEnd()
-            .toFormatter();
-    }
-
-    @Override
-    public String getName() {
-        return "file_reader";
-    }
+	@Override
+	public String getName() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
