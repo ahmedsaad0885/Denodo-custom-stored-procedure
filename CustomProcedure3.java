@@ -20,7 +20,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+
 public class CustomProcedure3 extends AbstractStoredProcedure {
+	// for handling if the spelling or datatypes change
+public static final String typeInt = "INTEGER";
+public static final String typeString = "VARCHAR";
+public static final String typeDecimal = "DECIMAL";
+public static final String typeLong = "BIGINT";
+public static final String typeBoolean = "BOOLEAN";
+public static final String typeArray = "ARRAY";
+public static final String typeTimeStamp = "TIMESTAMP";
 
     private static final long serialVersionUID = 1L;
     
@@ -119,7 +128,7 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
             String currentType = metadata.get(i);
             String currentName = metadataNames.get(i);
 
-            if (currentType.equals("ARRAY")) {
+            if (currentType.equals(typeArray)) {
                 List<StoredProcedureParameter> structParameters = new ArrayList<>();
                 List<String> currentStructNames = structNames.get(structIndex);
                 List<String> currentStructMetadata = structMetadata.get(structIndex);
@@ -172,16 +181,22 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
 
                         String currentType = metadata.get(metadataIndex);
                         switch (currentType) {
-                            case "INTEGER":
+                            case typeInt:
                                 row[metadataIndex] = jsonHandler.handleInt(jsonParser);
                                 break;
-                            case "BIGINT":
-                                row[metadataIndex] = jsonHandler.handleLong(jsonParser);
+                            case typeString:
+                                row[metadataIndex] = jsonHandler.handleText(jsonParser);
                                 break;
-                            case "DECIMAL":
+                            case typeDecimal:
                                 row[metadataIndex] = jsonHandler.handleDecimal(jsonParser);
                                 break;
-                            case "ARRAY":
+                            case typeLong:
+                                row[metadataIndex] = jsonHandler.handleLong(jsonParser);
+                                break;
+                            case typeBoolean:
+                                row[metadataIndex] = jsonHandler.handleBoolean(jsonParser);
+                                break;
+                            case typeArray:
                                 if (jsonParser.currentToken() == JsonToken.START_ARRAY) {//allows the method to identify when it encounters a nested array within a struct and It enables the method to recursively process nested structures,
                                     if (structIndex >= structMetadata.size()) {
                                         throw new StoredProcedureException("Struct index out of bounds at Struct");
@@ -191,14 +206,8 @@ public class CustomProcedure3 extends AbstractStoredProcedure {
                                     structIndex++;
                                 }
                                 break;
-                            case "TIMESTAMP":
+                            case typeTimeStamp:
                                 row[metadataIndex] = jsonHandler.handleTimestamp(jsonParser, formatter);
-                                break;
-                            case "BOOLEAN":
-                                row[metadataIndex] = jsonHandler.handleBoolean(jsonParser);
-                                break;
-                            case "VARCHAR":
-                                row[metadataIndex] = jsonHandler.handleText(jsonParser);
                                 break;
                             default:
                                 throw new StoredProcedureException("Unsupported type in metadata");

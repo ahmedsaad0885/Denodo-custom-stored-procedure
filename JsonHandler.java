@@ -20,7 +20,14 @@ import com.fasterxml.jackson.core.JsonToken;
 
 public class JsonHandler {
 	
-
+	// for handling if the spelling or datatypes change
+public static final String typeInt = "INTEGER";
+public static final String typeString = "VARCHAR";
+public static final String typeDecimal = "DECIMAL";
+public static final String typeLong = "BIGINT";
+public static final String typeBoolean = "BOOLEAN";
+public static final String typeArray = "ARRAY";
+public static final String typeTimeStamp = "TIMESTAMP";
     public List<Struct> handleStruct(JsonParser jsonParser, DateTimeFormatter formatter, List<String> structMetadata,
     		List<String> structNames) throws StoredProcedureException {
         List<Struct> structList = new ArrayList<>();
@@ -38,29 +45,29 @@ public class JsonHandler {
 
                         String type = structMetadata.get(currentIndex);
                         switch (type) {
-                            case "VARCHAR":
+                        	case typeInt:
+                            structValues.add(handleInt(jsonParser));
+                            break;
+                            case typeString:
                                 structValues.add(handleText(jsonParser));
                                 break;
-                            case "DECIMAL":
+                            case typeDecimal:
                                 structValues.add(handleDecimal(jsonParser));
                                 break;
-                            case "TIMESTAMP":
-                                structValues.add(handleTimestamp(jsonParser, formatter));
-                                break;
-                            case "INTEGER":
-                                structValues.add(handleInt(jsonParser));
-                                break;
-                            case "BIGINT":
+                            case typeLong:
                                 structValues.add(handleLong(jsonParser));
                                 break;
-                            case "BOOLEAN":
+                            case typeBoolean:
                                 structValues.add(handleBoolean(jsonParser));
                                 break;
-                            case "ARRAY":
+                            case typeArray:
                                 if (jsonParser.currentToken() == JsonToken.START_ARRAY) {//recursively calls itself if the struct has an array
                                     List<Struct> nestedStructList = handleStruct(jsonParser, formatter, structMetadata, structNames);
                                     structValues.add(AbstractStoredProcedure.createArray(nestedStructList, Types.STRUCT));
                                 }
+                                break;
+                            case typeTimeStamp:
+                                structValues.add(handleTimestamp(jsonParser, formatter));
                                 break;
                             default:
                                 throw new StoredProcedureException("Unsupported type in struct metadata");
@@ -152,20 +159,20 @@ public class JsonHandler {
     }
     public int getSqlType(String type) {
         switch (type) {
-            case "VARCHAR":
+            case typeString:
                 return Types.VARCHAR;
-            case "DECIMAL":
-                return Types.DECIMAL;
-            case "TIMESTAMP":
-                return Types.TIMESTAMP;
-            case "INTEGER":
+            case typeInt:
                 return Types.INTEGER;
-            case "BIGINT":
+            case typeDecimal:
+                return Types.DECIMAL;
+            case typeLong:
                 return Types.BIGINT;
-            case "BOOLEAN":
+            case typeBoolean:
                 return Types.BOOLEAN;
-            case "ARRAY":
+            case typeArray:
             	return Types.ARRAY;
+            case typeTimeStamp:
+                return Types.TIMESTAMP;
             default:
                 throw new IllegalArgumentException("Unsupported type: " + type);
         }
