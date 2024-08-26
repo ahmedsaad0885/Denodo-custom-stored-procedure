@@ -28,6 +28,22 @@ public static final String typeLong = "BIGINT";
 public static final String typeBoolean = "BOOLEAN";
 public static final String typeArray = "ARRAY";
 public static final String typeTimeStamp = "TIMESTAMP";
+
+
+
+    List<List<String>> innerStructNames = Arrays.asList(
+    		Arrays.asList("nested_array_id", "nested_array_text"),
+    		Arrays.asList("nested_array_id2", "nested_array_text2")
+
+    		);
+
+    		List<List<String>> innerStructMetadata = Arrays.asList(
+    		    Arrays.asList("INTEGER", "VARCHAR"),
+    		    Arrays.asList("INTEGER", "VARCHAR")
+
+    		);
+
+
     public List<Struct> handleStruct(JsonParser jsonParser, DateTimeFormatter formatter, List<String> structMetadata,
     		List<String> structNames) throws StoredProcedureException {
         List<Struct> structList = new ArrayList<>();
@@ -36,6 +52,7 @@ public static final String typeTimeStamp = "TIMESTAMP";
                 if (jsonParser.currentToken() == JsonToken.START_OBJECT) {// ensures that only JSON objects are processed
                     List<Object> structValues = new ArrayList<>();
                     int currentIndex = 0;
+                    int innerStructIndex = 0;
                     while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
                         jsonParser.nextToken();
 
@@ -60,10 +77,11 @@ public static final String typeTimeStamp = "TIMESTAMP";
                             case typeBoolean:
                                 structValues.add(handleBoolean(jsonParser));
                                 break;
-                            case typeArray:
-                                if (jsonParser.currentToken() == JsonToken.START_ARRAY) {//recursively calls itself if the struct has an array
-                                    List<Struct> nestedStructList = handleStruct(jsonParser, formatter, structMetadata, structNames);
+                            case typeArray:  
+                                if (jsonParser.currentToken() == JsonToken.START_ARRAY) {
+                                    List<Struct> nestedStructList = handleStruct(jsonParser, formatter, innerStructMetadata.get(innerStructIndex), innerStructNames.get(innerStructIndex));
                                     structValues.add(AbstractStoredProcedure.createArray(nestedStructList, Types.STRUCT));
+                                    innerStructIndex++;
                                 }
                                 break;
                             case typeTimeStamp:
@@ -82,15 +100,6 @@ public static final String typeTimeStamp = "TIMESTAMP";
             throw new StoredProcedureException("Error processing struct", e);
         }
         return structList;
-    }
-
-    private Object createArray(List<Struct> elements, int type) throws StoredProcedureException {
-        return AbstractStoredProcedure.createArray(elements, type);
-    }
-
-    private Object createArray(Object[] elements, int type) throws StoredProcedureException {
-        List<Object> elementList = Arrays.asList(elements);
-        return AbstractStoredProcedure.createArray(elementList, type);
     }
 
     public String handleText(JsonParser jsonParser) {
@@ -157,6 +166,7 @@ public static final String typeTimeStamp = "TIMESTAMP";
             .optionalEnd()
             .toFormatter();
     }
+    
     public int getSqlType(String type) {
         switch (type) {
             case typeString:
@@ -177,7 +187,5 @@ public static final String typeTimeStamp = "TIMESTAMP";
                 throw new IllegalArgumentException("Unsupported type: " + type);
         }
     }
-
-
 
 }
