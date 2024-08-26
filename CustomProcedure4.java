@@ -24,6 +24,7 @@ import java.util.List;
 public class CustomProcedure4 extends AbstractStoredProcedure {
 
     private static final long serialVersionUID = 1L;
+   
 
     
     
@@ -179,19 +180,6 @@ List<List<String>> structNames = Arrays.asList(
     }
 
 
-private List<StoredProcedureParameter> innerArrayParam(List<List<String>> innerStructMetadata2, List<List<String>> innerStructNames2, int innerStructIndex, JsonHandler jsonHandler) {
-    List<StoredProcedureParameter> structParameters = new ArrayList<>();
-    List<String> currentStructNames = innerStructNames2.get(innerStructIndex);
-    List<String> currentStructMetadata = innerStructMetadata2.get(innerStructIndex);
-
-    for (int j = 0; j < currentStructNames.size(); j++) {
-        String structField = currentStructNames.get(j);
-        int sqlType = jsonHandler.getSqlType(currentStructMetadata.get(j));
-        structParameters.add(new StoredProcedureParameter(structField, sqlType, StoredProcedureParameter.DIRECTION_OUT));
-    }
-
-    return structParameters;
-}
 
 
     @Override
@@ -205,7 +193,7 @@ private List<StoredProcedureParameter> innerArrayParam(List<List<String>> innerS
         try (JsonParser jsonParser = jsonFactory.createParser(new File(filePath))) {
             while (jsonParser.nextToken() != JsonToken.END_ARRAY) {
                 if (jsonParser.currentToken() == JsonToken.START_OBJECT) {// ensures that only JSON objects are processed
-                    int metadataIndex = 0, structIndex = 0;
+                    int metadataIndex = 0, structIndex = 0, innerStructIndex=0; 
                     Object[] row = new Object[metadata.size()];
 
                     while (jsonParser.nextToken() != JsonToken.END_OBJECT && metadataIndex < metadata.size()) {
@@ -227,15 +215,35 @@ private List<StoredProcedureParameter> innerArrayParam(List<List<String>> innerS
                                 row[metadataIndex] = jsonHandler.handleDecimal(jsonParser);
                                 break;
                             case "ARRAY":
-                                if (jsonParser.currentToken() == JsonToken.START_ARRAY) {//allows the method to identify when it encounters a nested array within a struct and It enables the method to recursively process nested structures,
+                                if (jsonParser.currentToken() == JsonToken.START_ARRAY) {
+                                    // Check if there is a nested array in the current structure
                                     if (structIndex >= structMetadata.size()) {
                                         throw new StoredProcedureException("Struct index out of bounds at Struct");
                                     }
-                                    List<Struct> structList = jsonHandler.handleStruct(jsonParser, formatter, structMetadata.get(structIndex), structNames.get(structIndex));
+
+                                    // Lookahead in structMetadata for nested ARRAY
+                                    List<String> currentStructMetadata = structMetadata.get(structIndex);
+                                    boolean hasNestedArray = false;
+                                    for (String meta : currentStructMetadata) {
+                                        if (meta.equals("ARRAY")) {
+                                            hasNestedArray = true;
+                                            break; // No need to continue if we found an ARRAY
+                                        }
+                                    }
+
+                                    if (hasNestedArray) {
+                                        List<Struct> structList = jsonHandler.handleStruct(jsonParser, formatter, currentStructMetadata, structNames.get(structIndex),innerStructIndex);
+                                        row[metadataIndex] = createArray(structList, Types.STRUCT);
+                                        innerStructIndex++;
+                                        structIndex++;
+                                    }else {
+                                    List<Struct> structList = jsonHandler.handleStruct(jsonParser, formatter, currentStructMetadata, structNames.get(structIndex),innerStructIndex);
                                     row[metadataIndex] = createArray(structList, Types.STRUCT);
                                     structIndex++;
+                                    }
                                 }
                                 break;
+
                             case "TIMESTAMP":
                                 row[metadataIndex] = jsonHandler.handleTimestamp(jsonParser, formatter);
                                 break;

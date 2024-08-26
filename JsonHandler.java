@@ -45,14 +45,13 @@ public static final String typeTimeStamp = "TIMESTAMP";
 
 
     public List<Struct> handleStruct(JsonParser jsonParser, DateTimeFormatter formatter, List<String> structMetadata,
-    		List<String> structNames) throws StoredProcedureException {
+    		List<String> structNames, int innerStructIndex) throws StoredProcedureException {
         List<Struct> structList = new ArrayList<>();
         try {
             while (jsonParser.nextToken() != JsonToken.END_ARRAY) {
                 if (jsonParser.currentToken() == JsonToken.START_OBJECT) {// ensures that only JSON objects are processed
                     List<Object> structValues = new ArrayList<>();
                     int currentIndex = 0;
-                    int innerStructIndex = 0;
                     while (jsonParser.nextToken() != JsonToken.END_OBJECT) {
                         jsonParser.nextToken();
 
@@ -79,9 +78,8 @@ public static final String typeTimeStamp = "TIMESTAMP";
                                 break;
                             case typeArray:  
                                 if (jsonParser.currentToken() == JsonToken.START_ARRAY) {
-                                    List<Struct> nestedStructList = handleStruct(jsonParser, formatter, innerStructMetadata.get(innerStructIndex), innerStructNames.get(innerStructIndex));
+                                    List<Struct> nestedStructList = handleStruct(jsonParser, formatter, innerStructMetadata.get(innerStructIndex), innerStructNames.get(innerStructIndex),innerStructIndex);
                                     structValues.add(AbstractStoredProcedure.createArray(nestedStructList, Types.STRUCT));
-                                    innerStructIndex++;
                                 }
                                 break;
                             case typeTimeStamp:
